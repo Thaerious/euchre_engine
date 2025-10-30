@@ -1,10 +1,12 @@
 import random
 from typing import List, Tuple
-from .cards import IDX2CARD
+
+SUITS = ["♣", "♦", "♥", "♠"]
+RANKS = ["9", "10", "J", "Q", "K", "A"]
 
 class Deck:
     def __init__(self):
-        self.cards = IDX2CARD.copy()
+        self.cards = [r + s for s in SUITS for r in RANKS]
 
     def shuffle(self, rng: random.Random) -> None:
         rng.shuffle(self.cards)

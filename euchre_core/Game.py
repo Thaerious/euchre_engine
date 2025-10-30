@@ -111,14 +111,12 @@ class Game():
         if action == "pass":            
             if self._engine.seat == self._engine.dealer:
                 self._engine.next_player()
-                self.enter_state_3()                
+                self.enter_state_3()
         elif action == "order":  
-            self._engine.trump = card_suit(self._engine.upcard)
-            self._engine.maker = self._engine.seat
+            self._engine.order_up()
             self.enter_state_2()
         elif action == "alone":
-            self._engine.trump = card_suit(self._engine.upcard)
-            self._engine.maker = self._engine.seat
+            self._engine.order_up()
             self._engine.go_alone()
             self.enter_state_2()
 
@@ -140,13 +138,10 @@ class Game():
         self.allowed_actions(action, "down", "up")
         self._engine.dealer_action = action
 
-        if action == "up":    
-            dealers_hand = self._engine.hands[self._engine.dealer]   
-            dealers_hand.remove(card)  
-            self._engine.discard = card
-            dealers_hand.append(self._engine.upcard)       
+        if action == "up": 
+            self._engine.pick_up(card)
 
-        self._engine.seat = (self._engine.dealer + 1) % 4
+        self._engine.seat = self._engine.dealer + 1
         self.enter_state_5()
 
     def enter_state_3(self):
@@ -226,7 +221,7 @@ class Game():
         """
         trick_winner = self._engine.trick_winner()
         team = team_of(trick_winner)
-        self._engine.tricks_taken[team] += 1
+        self._engine.add_trick_taken(team)
         self._engine.set_order(trick_winner)
 
         self._state = self.state_6
