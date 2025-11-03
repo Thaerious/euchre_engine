@@ -5,10 +5,8 @@ from typing import List, Tuple, Dict, Optional, TypedDict, Literal
 from .cards import effective_suit, card_suit
 from .Deck import Deck
 from .EuchreError import EuchreError
-from .compare_cards import best_card, compare_cards
+from .CardTable import CardTable
 import traceback
-
-ActionKind = Literal["bid", "play"]
 
 class EuchreEngine:
     """Pure game engine. No bot logic here."""
@@ -22,6 +20,7 @@ class EuchreEngine:
         deck.shuffle(self._rng)
         h0, h1, h2, h3, self._upcard = deck.deal()
 
+        self._downcard = None
         self._alone = [] # list of players that have gone alone
         self._discard = None # card discarded by dealer
         self._hands = [h0,h1,h2,h3] # array of hands returned from deck shuffle
@@ -31,6 +30,18 @@ class EuchreEngine:
         self._seat = (self._dealer + 1) % 4 # the current player performing an action
         self._maker: Optional[int] = None # the player that made trump
         self.set_order(self._dealer + 1) # order of players performing actions
+        self.card_table = CardTable(None, None) # lookup table for card values
+
+    @property
+    def trump(self) -> int: return self._trump
+
+    @trump.setter
+    def trump(self, suit):
+        if self._downcard is not None and suit == card_suit(self._downcard):
+            raise EuchreError(f"Can not declare same suit ({suit}) as downcard ({self._downcard}).")
+
+        self._maker = self._seat
+        self._trump = suit
 
     @property
     def seat(self) -> int: return self._seat
@@ -53,6 +64,10 @@ class EuchreEngine:
     def is_team_alone(self, team: int) -> bool:
         return team in self._alone or ((team + 2) % 4) in self._alone
 
+    def turn_down_card(self):
+        self._downcard = self._upcard
+        self._upcard = None
+
     def next_hand(self):
         self._dealer = (self._dealer + 1) % 4
 
@@ -74,6 +89,9 @@ class EuchreEngine:
         self._seat = (self._seat + 1) % 4
 
     def play_card(self, card):
+        if len(self.current_trick) == 0:
+            self.card_table = CardTable(self._trump, card_suit(card))
+
         if not card in self.playable_cards():
             raise EuchreError(f"Card '{card}' is not a legal play.")
 
@@ -127,7 +145,7 @@ class EuchreEngine:
         lead_suit = effective_suit(best_card, self._trump)
 
         for seat, card in self.current_trick[1:]:
-            compare = compare_cards(best_card, card, self._trump, lead_suit)
+            compare = self.card_table.compare(best_card, card)
             if compare < 0: best_seat, best_card = seat, card
 
         return best_seat
@@ -144,6 +162,8 @@ class EuchreEngine:
             "hands": self._hands,
             "trump": self._trump,
             "upcard": self._upcard,
+            "downcard": self._downcard,
+            "discard": self._discard,
             "tricks": self._tricks,
             "taken": self._tricks_taken,
             "points": list(self._points),

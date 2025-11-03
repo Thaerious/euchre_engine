@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "euchre_core"
+version = "1.0.0"
+description = "Core Euchre game engine"
+authors = [{ name = "Ed Armstrong", email = "ed@frar.ca" }]
+readme = "README.md"
+dependencies = []
+license = { text = "MIT" }
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+dev = ["pylint", "pytest", "bdoc"]
+
+[tool.setuptools.packages]
+find = {where = ["src/euchre_core"]}

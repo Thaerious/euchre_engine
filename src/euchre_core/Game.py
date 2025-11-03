@@ -6,14 +6,6 @@ maintains the finite state machine for a euchre game
 # pylint ignore attribute and public method counts
 # pylint: disable=R0902, R0904
 
-# import json
-
-# from euchre.Euchre import Euchre
-# from euchre.EuchreError import EuchreError
-# from euchre.card import Card, Trick
-# from euchre.utility import custom_json_serializer
-# from euchre import Settings
-
 from .EuchreEngine import EuchreEngine, team_of
 from .EuchreError import EuchreError
 from .cards import card_suit
@@ -108,9 +100,9 @@ class Game():
         """
         self.allowed_actions(action, "pass", "order", "alone")
 
-        if action == "pass":            
-            if self._engine.seat == self._engine.dealer:
-                self._engine.next_player()
+        if action == "pass":
+            self._engine.next_player()
+            if self._engine.seat == self._engine.dealer:                
                 self.enter_state_3()
         elif action == "order":  
             self._engine.order_up()
@@ -149,7 +141,7 @@ class Game():
         Transition to state 3: Dealer turns down the up-card,
         and players begin selecting a trump suit.
         """
-        self.deck.turn_down_card()
+        self._engine.turn_down_card()
         self._state = self.state_3
 
     def state_3(self, action: str, suit: str | None) -> None:
@@ -163,16 +155,25 @@ class Game():
         self.allowed_actions(action, "pass", "make", "alone")
 
         if action == "pass":
-            if self.players.activate_next_player() == self.players.dealer:
-                self._state = self.state_4
-        elif action in ["make", "alone"]:
-            self.deck.make_trump(suit)
-            if action == "alone":
-                self.players.go_alone()
-
-            self.players.activate_first_player()
-            self._engine.seat = (self._engine.dealer + 1) % 4
+            self._engine.next_player()
+            if self._engine.seat == self._engine.dealer:                
+                self.enter_state_4()
+        elif action == "make":
+            self._engine.trump = suit
+            self._engine.seat = self._engine.dealer + 1
             self.enter_state_5()
+        elif action == "alone":
+            self._engine.go_alone()
+            self._engine.trump == suit
+            self._engine.seat = self._engine.dealer + 1
+            self.enter_state_5()
+
+
+    def enter_state_4(self) -> None:
+        """
+        Transition to state 4: Dealer decides to make trump or go alone.
+        """
+        self._state = self.state_4
 
     def state_4(self, action: str, suit: str | None) -> None:
         """
@@ -184,12 +185,11 @@ class Game():
         """
         self.allowed_actions(action, "make", "alone")
 
-        self.make_trump(suit)
         if action == "alone":
             self.players.go_alone()
 
-        self.players.activate_first_player()
-        self._engine.seat = (self._engine.dealer + 1) % 4
+        self._engine.trump = suit
+        self._engine.seat = self._engine.dealer + 1
         self.enter_state_5()
 
     def enter_state_5(self) -> None:
