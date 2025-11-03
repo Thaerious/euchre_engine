@@ -1,6 +1,0 @@
-pyproject.toml
-src/euchre_core/euchre_core.egg-info/PKG-INFO
-src/euchre_core/euchre_core.egg-info/SOURCES.txt
-src/euchre_core/euchre_core.egg-info/dependency_links.txt
-src/euchre_core/euchre_core.egg-info/requires.txt
-src/euchre_core/euchre_core.egg-info/top_level.txt

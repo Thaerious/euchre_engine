@@ -4,6 +4,7 @@ euchre_error.py
 Defines the custom EuchreError class for handling game-specific exceptions.
 """
 
+
 class EuchreError(Exception):
     """
     Custom exception class for Euchre-specific errors.

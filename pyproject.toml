@@ -13,7 +13,25 @@ license = { text = "MIT" }
 requires-python = ">=3.10"
 
 [project.optional-dependencies]
-dev = ["pylint", "pytest", "bdoc"]
+dev = ["pylint", "pytest", "pdoc", "coverage"]
 
-[tool.setuptools.packages]
-find = {where = ["src/euchre_core"]}
+[tool.setuptools]
+package-dir = {"" = "src"}  # <-- tell setuptools where code lives
+
+[tool.setuptools.packages.find]
+where = ["src"]              # <-- search under src/
+include = ["euchre_core*"]   # (optional but nice)
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-v", "-x", "-s"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "^class .*Error",
+    "^class .*Exception"
+]
+
+[tool.coverage.run]
+omit = ["tests/*"]

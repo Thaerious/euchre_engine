@@ -17,3 +17,30 @@ pytest tests/test_name.py
 ### building package
 pip install build
 python -m build
+
+### Running Tests with Coverage
+
+```bash
+pip install coverage
+coverage run -m pytest tests
+coverage report # text view
+coverage html # html view
+wslview htmlcov/index.html
+```
+
+#### Clear Coverage Files
+```bash
+rm .coverage
+rm -r htmlcov
+```
+
+---
+
+### Helpful Test Flags
+
+```bash
+-x    # Exit on first failure
+-k    # Run tests that match a keyword expression
+-v    # Verbose output
+-s    # Print stdout during test runs
+```

@@ -1,5 +1,5 @@
 """
-compare.py
+CardTable.py
 
 Provides logic for comparing Euchre cards based on trump and lead suit.
 A central `lookup_table` is used to assign a rank to each card depending
@@ -12,7 +12,7 @@ on the context (trump suit and lead suit). Includes helper functions:
 Useful for determining trick winners and AI decisions.
 """
 
-from typing import Optional
+from typing import Optional, Iterable
 
 OPPOSITE = {"♠":"♣", "♥":"♦", "♣":"♠", "♦":"♥"}
 SUITS = ["♠", "♥", "♣", "♦"]
@@ -43,7 +43,6 @@ class CardTable:
         Args:
             left: The first card object.
             right: The second card object.
-            lead (str, optional): The leading suit. Defaults to None.
 
         Returns:
             int: A positive number if left is greater than right,
@@ -51,67 +50,33 @@ class CardTable:
                 and 0 if they are equal.
         """
 
-        lhs = self.dictionary[left]
-        rhs = self.dictionary[right]
-        return lhs - rhs
+        return self.dictionary[left] - self.dictionary[right]
+   
 
+    def best_of(self, collection: Iterable[str]):
+        collection = list(collection)
 
-    def best_card(self, left: str, right: str) -> str:
-        """
-        Determine the best card between two cards.
-
-        Args:
-            left: The first card object.
-            right: The second card object.
-            lead (str, optional): The leading suit. Defaults to None.
-
-        Returns:
-            The better of the two cards based on the lookup table.
-            When tied the left card is considered better.
-        """
-        compare = compare(left, right, trump, lead)
-        if compare > 0:
-            return left
-        if compare < 0:
-            return right
-        return left
-
-
-    def worst_card(self, left: str, right: str) -> int:
-        """
-        Determine the worst card between two cards.
-
-        Args:
-            left: The first card object.
-            right: The second card object.
-            lead (str, optional): The leading suit. Defaults to None.
-
-        Returns:
-            The worse of the two cards based on the lookup table.
-            When tied the right card is considered worse.
-        """
-        compare = compare(left, right, trump, lead)
-        if compare > 0:
-            return right
-        if compare < 0:
-            return left
-        return right
-
-    def best_of(self, collection):
-        if len(collection) == 0: 
-            raise EuchreError("Can not get best card of empty set.")
+        if not collection:
+            raise ValueError("Collection cannot be empty")
 
         best = collection[0]
         for card in collection[1:]:
-            best = self.best_card(best, card)
+            best = best if self.compare(best, card) >= 0 else card
 
-    def best(self, collection):
-        if len(collection) == 0: 
-            raise EuchreError("Can not get worst card of empty set.")
+        return best
+
+
+    def worst_of(self, collection: Iterable[str]):
+        collection = list(collection)
+
+        if not collection:
+            raise ValueError("Collection cannot be empty")
 
         worst = collection[0]
         for card in collection[1:]:
-            best = self.worst_card(best, card)
+            worst = card if self.compare(worst, card) >= 0 else worst
+
+        return worst
 
     def observation(self):
         sb = ""
