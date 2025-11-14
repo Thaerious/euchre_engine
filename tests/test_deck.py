@@ -25,17 +25,17 @@ def test_deal_returns_four_hands_and_upcard():
     rng = random.Random(0)
     d = Deck()
     d.shuffle(rng)
-    h1, h2, h3, h4, up = d.deal()
+    hands, up = d.deal()
 
     # Each hand has 5 cards
-    for h in [h1, h2, h3, h4]:
+    for h in hands:
         assert len(h) == 5
 
     # 3 cards remain
     assert len(d.cards) == 3
 
     # All cards unique across hands and up
-    all_dealt = set(sum([h1, h2, h3, h4], []) + [up]) # keeps unique only
+    all_dealt = set(sum(hands, []) + [up]) # keeps unique only
     assert len(all_dealt) == 21
 
     # All valid cards

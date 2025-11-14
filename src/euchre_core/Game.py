@@ -255,7 +255,7 @@ class Game():
         if self._engine.is_game_over():
             self._state = self.state_8
         else:
-            self._engine.next_hand()
+            self._engine.inc_dealer()
             self.enter_state_1()
 
     def state_8(self, _: str, __: Any) -> None:

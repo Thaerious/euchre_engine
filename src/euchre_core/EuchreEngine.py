@@ -1,3 +1,6 @@
+"""
+EuchreEngine.py
+"""
 
 from __future__ import annotations
 import random
@@ -14,26 +17,30 @@ class EuchreEngine:
         self._rng = random.Random(seed)
         self._points = [0, 0]
         self._dealer = 0
+        self._clear()
 
-    def start_hand(self):
-        deck = Deck()
-        deck.shuffle(self._rng)
-        h0, h1, h2, h3, self._upcard = deck.deal()
-
+    def _clear(self):
         self._downcard = None
         self._alone = [] # list of players that have gone alone
         self._discard = None # card discarded by dealer
-        self._hands = [h0,h1,h2,h3] # array of hands returned from deck shuffle
+        self._hands = [[],[],[],[]] # array of hands returned from deck shuffle
         self._tricks = [[] for _ in range(5)] # array of tricks
         self._trump: Optional[str] = None # current trump
         self._tricks_taken = [0,0] # count of tricks taken for each team
         self._seat = (self._dealer + 1) % 4 # the current player performing an action
         self._maker: Optional[int] = None # the player that made trump
         self.set_order(self._dealer + 1) # order of players performing actions
-        self.card_table = CardTable(None, None) # lookup table for card values
+        self.card_table = CardTable(None, None) # lookup table for card values        
+
+    def start_hand(self):
+        self._clear()        
+        deck = Deck()
+        deck.shuffle(self._rng)
+        self._hands, self._upcard = deck.deal()
+
 
     @property
-    def trump(self) -> int: return self._trump
+    def trump(self) -> Optional[str]: return self._trump
 
     @trump.setter
     def trump(self, suit):
@@ -42,6 +49,18 @@ class EuchreEngine:
 
         self._maker = self._seat
         self._trump = suit
+
+    @property
+    def maker(self) -> Optional[int]: return self._maker
+
+    @property
+    def downcard(self) -> Optional[str]: return self._downcard
+
+    @property
+    def upcard(self) -> Optional[str]: return self._upcard
+
+    @property
+    def discard(self) -> Optional[str]: return self._discard
 
     @property
     def seat(self) -> int: return self._seat
@@ -61,14 +80,17 @@ class EuchreEngine:
     @property
     def current_trick(self): return self._tricks[self.tricks_played]
 
+    def get_hand(self, index): 
+        return self._hands[index % 4].copy()
+
     def is_team_alone(self, team: int) -> bool:
-        return team in self._alone or ((team + 2) % 4) in self._alone
+        return team in self._alone or partner_of(team) in self._alone
 
     def turn_down_card(self):
         self._downcard = self._upcard
         self._upcard = None
 
-    def next_hand(self):
+    def inc_dealer(self):
         self._dealer = (self._dealer + 1) % 4
 
     def order_up(self):
@@ -81,9 +103,12 @@ class EuchreEngine:
         self._discard = card
         dealers_hand.append(self._upcard)     
 
+    def is_alone(self, seat):
+        return seat in self._alone
+
     def go_alone(self): 
-        self._alone.push(self._seat)
-        self.player_order.remove((self._seat + 2) % 4)
+        self._alone.append(self.seat)
+        self.player_order.remove(partner_of(self.seat))
 
     def next_player(self):
         self._seat = (self._seat + 1) % 4
@@ -171,3 +196,6 @@ class EuchreEngine:
     
 def team_of(player: int):
     return (player % 2)    
+
+def partner_of(player: int):
+    return (player + 2) % 4

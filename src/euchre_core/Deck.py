@@ -23,4 +23,4 @@ class Deck:
                 hands[p].append(self.cards.pop())
 
         up = self.cards.pop()
-        return hands[0], hands[1], hands[2], hands[3], up
+        return hands, up

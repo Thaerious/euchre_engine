@@ -3,8 +3,9 @@
 ```bash
 python -m venv venv
 source ./venv/bin/activate # when opening a new terminal
-pip install .[dev] # install development libs (project.optional-dependencies)
-pip install -e . # install euchre library locally (editable install).
+pip install .[dev]         # install development libs (project.optional-dependencies)
+pip install -e .           # install euchre library locally (editable install).
+```
 
 ### Running Tests
 
@@ -13,10 +14,6 @@ pip install pytest
 pytest tests
 pytest tests/test_name.py
 ```
-
-### building package
-pip install build
-python -m build
 
 ### Running Tests with Coverage
 
@@ -33,6 +30,10 @@ wslview htmlcov/index.html
 rm .coverage
 rm -r htmlcov
 ```
+### building package
+pip install build
+python -m build
+
 
 ---
 

@@ -35,3 +35,14 @@ exclude_lines = [
 
 [tool.coverage.run]
 omit = ["tests/*"]
+
+[clean]
+paths = [
+  "build",
+  "dist",
+  "*.egg-info",
+  "**/__pycache__",
+  ".coverage",
+  "htmlcov",
+  ".pytest_cache"
+]
