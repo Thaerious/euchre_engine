@@ -22,10 +22,6 @@ package-dir = {"" = "src"}  # <-- tell setuptools where code lives
 where = ["src"]              # <-- search under src/
 include = ["euchre_core*"]   # (optional but nice)
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = ["-v", "-x", "-s"]
-
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",

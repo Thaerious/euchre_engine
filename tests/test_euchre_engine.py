@@ -5,11 +5,13 @@ tests/test_euchre_engine.py
 import pytest
 from euchre_core import EuchreEngine, EuchreError, card_suit, team_of, partner_of
 
+
 @pytest.fixture
 def engine():
     # fixed seed so Deck.shuffle is deterministic if we ever want to assert
     # specific cards later; for now we just assert invariants
     return EuchreEngine(seed=123)
+
 
 @pytest.fixture
 def stochastic_engine():
@@ -26,11 +28,15 @@ def stochastic_engine():
 
     return engine
 
+
+@pytest.mark.init
 def test_engine_initial_state(engine):
     assert engine.dealer == 0
     assert engine.tricks_played == 0
-    assert not engine.is_game_over()    
+    assert not engine.is_game_over()
 
+
+@pytest.mark.start_hand
 def test_start_hand_initializes_core_state(engine):
     engine.start_hand()
 
@@ -70,6 +76,8 @@ def test_start_hand_initializes_core_state(engine):
     all_cards = [c for hand in engine._hands for c in hand] + [engine._upcard]
     assert len(set(all_cards)) == len(all_cards)
 
+
+@pytest.mark.set_order
 @pytest.mark.parametrize("start_at, order", [
     (-1, [3, 0, 1, 2]),
     (0, [0, 1, 2, 3]),
@@ -83,6 +91,8 @@ def test_set_order_rotates_players(engine, start_at, order):
     assert engine.player_order == order
     assert engine.seat == start_at % 4
 
+
+@pytest.mark.inc_dealer
 def test_inc_dealer_rotates_dealer(engine):
     assert engine.dealer == 0
     engine.inc_dealer()
@@ -92,8 +102,10 @@ def test_inc_dealer_rotates_dealer(engine):
     engine.inc_dealer()
     assert engine.dealer == 3
     engine.inc_dealer()
-    assert engine.dealer == 0  # wraps    
+    assert engine.dealer == 0  # wraps
 
+
+@pytest.mark.turn_down_card
 def test_turn_down_card_moves_upcard(engine):
     engine.start_hand()
     old_upcard = engine._upcard
@@ -103,6 +115,8 @@ def test_turn_down_card_moves_upcard(engine):
     assert engine.downcard == old_upcard
     assert engine.upcard is None
 
+
+@pytest.mark.order_up
 def test_order_up_sets_trump_and_maker(engine):
     engine.start_hand()
     seat_before = engine.seat
@@ -111,8 +125,10 @@ def test_order_up_sets_trump_and_maker(engine):
     engine.order_up()
 
     assert engine.trump == up_suit
-    assert engine.maker == seat_before  # maker is whoever ordered up    
+    assert engine.maker == seat_before  # maker is whoever ordered up
 
+
+@pytest.mark.trump
 def test_trump_cannot_match_downcard_suit(engine):
     engine.start_hand()
 
@@ -121,15 +137,19 @@ def test_trump_cannot_match_downcard_suit(engine):
     down_suit = card_suit(engine._downcard)
 
     with pytest.raises(EuchreError):
-        engine.trump = down_suit    
+        engine.trump = down_suit
 
+
+@pytest.mark.team_of
 def test_team_of_mapping():
     # even players -> team 0, odd -> team 1
     assert team_of(0) == 0
     assert team_of(1) == 1
     assert team_of(2) == 0
-    assert team_of(3) == 1        
+    assert team_of(3) == 1
 
+
+@pytest.mark.pick_up
 def test_pick_up_replaces_card_with_upcard(engine):
     engine.start_hand()
     dealer = engine.dealer
@@ -143,8 +163,10 @@ def test_pick_up_replaces_card_with_upcard(engine):
     assert engine.discard == card_to_discard
     assert len(engine._hands[dealer]) == original_len
     assert old_upcard in engine._hands[dealer]
-    assert card_to_discard not in engine._hands[dealer]    
+    assert card_to_discard not in engine._hands[dealer]
 
+
+@pytest.mark.go_alone
 def test_go_alone_removes_partner_from_order(engine):
     engine.start_hand()
     seat = engine.seat  # current maker
@@ -157,8 +179,10 @@ def test_go_alone_removes_partner_from_order(engine):
     assert engine.is_alone(seat)
     assert partner not in engine.player_order
     # still 3 players in order
-    assert len(engine.player_order) == 3    
+    assert len(engine.player_order) == 3
 
+
+@pytest.mark.trump
 def test_set_trump_sets_maker_and_trump(engine):
     engine.start_hand()
     engine.trump = "♠"
@@ -167,14 +191,18 @@ def test_set_trump_sets_maker_and_trump(engine):
     assert engine.maker == seat
     assert engine.trump == "♠"
 
+
+@pytest.mark.go_alone
 def test_go_alone_team_is_alone(engine):
     engine.start_hand()
     team = team_of(engine.seat)
-    engine.go_alone()    
+    engine.go_alone()
 
     assert engine.is_team_alone(team)
     assert not engine.is_team_alone((team + 1) % 2)
-  
+
+
+@pytest.mark.next_player
 def test_next_player_increments_seat_new_game(engine):
     engine.start_hand()
 
@@ -188,6 +216,8 @@ def test_next_player_increments_seat_new_game(engine):
     engine.next_player()
     assert engine.seat == 1
 
+
+@pytest.mark.next_player
 def test_next_player_wraps_around(engine):
     engine.start_hand()
 
@@ -195,8 +225,10 @@ def test_next_player_wraps_around(engine):
     engine.seat = 3
     engine.next_player()
 
-    assert engine.seat == 0    
+    assert engine.seat == 0
 
+
+@pytest.mark.next_player
 @pytest.mark.parametrize("start, expected", [
     (0, 1),
     (1, 2),
@@ -207,17 +239,21 @@ def test_next_player_parametric(engine, start, expected):
     engine.start_hand()
     engine.seat = start
     engine.next_player()
-    assert engine.seat == expected    
+    assert engine.seat == expected
 
+
+@pytest.mark.get_hand
 def test_get_hand(engine):
     hand = engine.get_hand(0)
     assert hand == []
-    
+
     engine.start_hand()
     hand = engine.get_hand(0)
     assert len(hand) == 5
 
-def test_play_card_legal_play_removes_from_hand_and_adds_to_trick(engine):    
+
+@pytest.mark.play_card
+def test_play_card_legal_play_removes_from_hand_and_adds_to_trick(engine):
     engine.start_hand()
 
     seat = engine.seat
@@ -250,6 +286,7 @@ def test_play_card_legal_play_removes_from_hand_and_adds_to_trick(engine):
     assert engine.current_trick[1] == (seat, 'A♦')
 
 
+@pytest.mark.play_card
 def test_play_card_raises_if_card_not_in_hand(engine):
     engine.start_hand()
 
@@ -262,8 +299,10 @@ def test_play_card_raises_if_card_not_in_hand(engine):
     assert illegal_card not in engine._hands[seat]
 
     with pytest.raises(EuchreError):
-        engine.play_card(illegal_card)    
+        engine.play_card(illegal_card)
 
+
+@pytest.mark.is_trick_finished
 def test_is_trick_finished_basic(engine):
     engine.start_hand()
 
@@ -288,8 +327,10 @@ def test_is_trick_finished_basic(engine):
     # play 4th card → finished
     card = engine.playable_cards()[0]
     engine.play_card(card)
-    assert engine.is_trick_finished()       
+    assert engine.is_trick_finished()
 
+
+@pytest.mark.score_hand
 def test_score_hand_defenders_euchre_not_alone(engine):
     # maker is player 0 → makers team = 0, defenders team = 1
     engine._maker = 0
@@ -302,6 +343,7 @@ def test_score_hand_defenders_euchre_not_alone(engine):
     assert engine._points == [0, 2]  # defenders get 2 points
 
 
+@pytest.mark.score_hand
 def test_score_hand_defenders_euchre_alone(engine):
     engine._maker = 0
     engine._tricks_taken = [2, 3]   # defenders > makers
@@ -313,6 +355,7 @@ def test_score_hand_defenders_euchre_alone(engine):
     assert engine._points == [0, 4]  # defenders get 4 points for lone euchre
 
 
+@pytest.mark.score_hand
 def test_score_hand_makers_win_normal(engine):
     engine._maker = 0
     engine._tricks_taken = [3, 2]   # makers > defenders, makers < 5
@@ -324,6 +367,7 @@ def test_score_hand_makers_win_normal(engine):
     assert engine._points == [1, 0]  # makers get 1 point
 
 
+@pytest.mark.score_hand
 def test_score_hand_makers_sweep_not_alone(engine):
     engine._maker = 0
     engine._tricks_taken = [5, 0]   # makers took all 5
@@ -335,6 +379,7 @@ def test_score_hand_makers_sweep_not_alone(engine):
     assert engine._points == [2, 0]  # makers get 2 points for a sweep
 
 
+@pytest.mark.score_hand
 def test_score_hand_makers_sweep_alone(engine):
     engine._maker = 0
     engine._tricks_taken = [5, 0]
@@ -343,8 +388,10 @@ def test_score_hand_makers_sweep_alone(engine):
 
     engine.score_hand()
 
-    assert engine._points == [4, 0]  # makers get 4 points for lone sweep    
+    assert engine._points == [4, 0]  # makers get 4 points for lone sweep
 
+
+@pytest.mark.score_hand
 def test_score_hand_both_teams_alone_defenders_euchre(engine):
     engine._maker = 0
     engine._tricks_taken = [2, 3]     # defenders win
@@ -354,8 +401,10 @@ def test_score_hand_both_teams_alone_defenders_euchre(engine):
     engine.score_hand()
 
     # defenders are alone → defenders get 4
-    assert engine._points == [0, 4]    
+    assert engine._points == [0, 4]
 
+
+@pytest.mark.score_hand
 def test_score_hand_both_teams_alone_maker_wins(engine):
     engine._maker = 0
     engine._tricks_taken = [3, 2]     # makers win (but not sweep)
@@ -365,8 +414,10 @@ def test_score_hand_both_teams_alone_maker_wins(engine):
     engine.score_hand()
 
     # makers are alone → makers get 1 (lone doesn't matter unless sweep)
-    assert engine._points == [1, 0]    
+    assert engine._points == [1, 0]
 
+
+@pytest.mark.score_hand
 def test_score_hand_both_teams_alone_maker_sweep(engine):
     engine._maker = 0
     engine._tricks_taken = [5, 0]     # makers sweep
@@ -376,8 +427,10 @@ def test_score_hand_both_teams_alone_maker_sweep(engine):
     engine.score_hand()
 
     # makers alone → lone sweep = 4 points
-    assert engine._points == [4, 0]    
+    assert engine._points == [4, 0]
 
+
+@pytest.mark.add_trick_taken
 def test_add_trick_taken_increments_team_count(engine):
     # start from clean state
     assert engine._tricks_taken == [0, 0]
@@ -393,8 +446,10 @@ def test_add_trick_taken_increments_team_count(engine):
 
     engine.add_trick_taken(0)
     assert engine._tricks_taken == [2, 1]
-    assert engine.tricks_played == 3    
+    assert engine.tricks_played == 3
 
+
+@pytest.mark.is_hand_finished
 def test_is_hand_finished_depends_on_total_tricks(engine):
     # simulate tricks being taken via add_trick_taken
     for _ in range(4):
@@ -411,8 +466,10 @@ def test_is_hand_finished_depends_on_total_tricks(engine):
     # extra tricks (defensive: shouldn’t happen in real play, but code allows)
     engine.add_trick_taken(0)
     assert engine.tricks_played == 6
-    assert engine.is_hand_finished()  # still finished once >= 5    
+    assert engine.is_hand_finished()  # still finished once >= 5
 
+
+@pytest.mark.trick_winner
 def test_trick_winner_regular_follow_suit(engine):
     engine._trump = "♥"                # trump irrelevant here
     engine._tricks = [[] for _ in range(5)]
@@ -423,4 +480,4 @@ def test_trick_winner_regular_follow_suit(engine):
         (3, "A♣"),
     ]
 
-    assert engine.trick_winner() == 3    
+    assert engine.trick_winner() == 3

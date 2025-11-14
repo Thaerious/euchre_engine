@@ -11,8 +11,9 @@ pip install -e .           # install euchre library locally (editable install).
 
 ```bash
 pip install pytest
-pytest tests
+pytest 
 pytest tests/test_name.py
+pytest -m start_hand # test specific method
 ```
 
 ### Running Tests with Coverage
